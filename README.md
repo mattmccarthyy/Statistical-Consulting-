@@ -1,3 +1,5 @@
+Links in the OneDrive will be updated should anything change. Still, familiarise yourself with how to put raw data from the GitHub. I will explain this, only takes two minutes.
+
 R contains all R scripts we write. Please label neatly.
 
 data contains 2 subfolders:
