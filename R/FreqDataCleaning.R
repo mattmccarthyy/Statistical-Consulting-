@@ -17,8 +17,7 @@ library(conflicted)
 conflict_prefer("filter", "dplyr", quiet = TRUE) # Use dplyr filter by default, otherwise we may run into issues with filter() if we use MASS for example. 
 conflict_prefer("lag", "dplyr", quiet = TRUE) # Had to add this due to conflicts later on.
 
-
-policy_url <- "https://raw.githubusercontent.com/mattmccarthyy/Statistical-Consulting-/main/data/motor_policy_year_100k_2025-10-22.csv"
+policy_url <- "https://raw.githubusercontent.com/mattmccarthyy/Statistical-Consulting-/refs/heads/main/data/raw/motor_policy_year_100k_2025-10-22.csv"
 policy_raw <- read_csv(policy_url, show_col_types = FALSE)
 policy <- policy_raw
 
