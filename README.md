@@ -1,4 +1,4 @@
-Links in the OneDrive will be updated should anything change. Still, familiarise yourself with how to put raw data from the GitHub. I will explain this, only takes two minutes.
+Links in the OneDrive will be updated should anything change. Still, familiarise yourself with how to pull raw data from the GitHub. I will explain this, only takes two minutes.
 
 R contains all R scripts we write. Please label neatly.
 
