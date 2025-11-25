@@ -2,6 +2,8 @@
 ## 1). Comparing GBDT with GLM (Assuming log-link)
 #########################################################################################################
 
+gamma_glm_test <- best_model_severity
+
 # Observed severities on test set
 y_obs <- test$gross_amount
 
