@@ -21,8 +21,8 @@ prop_claims_province
 n_counties <- c(
   Connacht = 5,
   Leinster = 12,
-  Munster  = 6,
-  Ulster   = 9
+  Munster = 6,
+  Ulster = 9
 )
 
 # per-county proportion
@@ -47,19 +47,18 @@ counties <- c(
 province_for_county <- c(
   rep("Connacht", 5),
   rep("Leinster", 12),
-  rep("Munster",  6),
-  rep("Ulster",   9)
+  rep("Munster", 6),
+  rep("Ulster", 9)
 )
 
 ## 3. Look up per-county proportion for each province
-##    (prop_per_county must be a named vector with those 4 province names)
 prop_claims_county <- prop_per_county[province_for_county]
 
 ## 4. Final Datawrapper table
 ireland_map_df <- data.frame(
-  county        = counties,
-  province      = province_for_county,
-  prop_claims   = prop_claims_county,
+  county = counties,
+  province = province_for_county,
+  prop_claims = prop_claims_county,
   stringsAsFactors = FALSE
 )
 
