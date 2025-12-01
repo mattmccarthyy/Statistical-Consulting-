@@ -16,7 +16,7 @@ policy_frequency$vehicle_power <- factor(
 )
 
 power_tab <- aggregate(
-  cbind(claims   = n_claims,
+  cbind(claims = n_claims,
         exposure = exposure) ~ vehicle_power,
   data = policy_frequency,
   FUN = sum
