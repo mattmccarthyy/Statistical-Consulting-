@@ -100,4 +100,4 @@ mod_fuel <- glm(n_claims ~ fuel + offset(log(exposure)),
 AIC(mod_no_fuel, mod_fuel)
 anova(mod_no_fuel, mod_fuel, test = "Chisq") # Not statistically significant.
 # We will likely include in our model, and we most definitely should keep collecting this data even 
-# if it is not a risk factor due to changing fleet composition. 
+# if it is not a key risk factor due to changing fleet composition. 
