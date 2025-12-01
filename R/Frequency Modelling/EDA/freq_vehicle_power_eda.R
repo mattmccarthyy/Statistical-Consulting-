@@ -55,16 +55,16 @@ power_tab[, c("vehicle_power", "relativity", "lower_rel", "upper_rel")]
 {
   par(mfrow = c(1,1),
       xaxs  = "i", yaxs = "i",
-      mar   = c(5.5, 5.5, 3, 1),
-      tcl   = -0.25,
+      mar = c(5.5, 5.5, 3, 1),
+      tcl = -0.25,
       cex.lab  = 1.3,
       cex.axis = 1.2,
-      mgp   = c(3.5, 0.7, 0))
+      mgp = c(3.5, 0.7, 0))
   
   bp <- barplot(power_tab$relativity,
                 names.arg = power_tab$vehicle_power,
                 ylab = "Relative claim frequency",
-                col  = "gray",
+                col = "gray",
                 ylim = c(0.9 * min(power_tab$relativity),
                          1.1 * max(power_tab$relativity)))
   
@@ -80,13 +80,13 @@ power_tab[, c("vehicle_power", "relativity", "lower_rel", "upper_rel")]
 # Using form used in "Occupation" EDA. Much clearer. 
 {
   par(mfrow = c(1, 1),
-      xaxs  = "i", yaxs = "i",
-      mar   = c(5.5, 5.5, 3, 1),
-      tcl   = -0.25,
-      cex.lab  = 1.3,
+      xaxs = "i", yaxs = "i",
+      mar = c(5.5, 5.5, 3, 1),
+      tcl = -0.25,
+      cex.lab = 1.3,
       cex.axis = 1.2,
-      col   = "black",
-      mgp   = c(3.5, 0.7, 0))
+      col = "black",
+      mgp = c(3.5, 0.7, 0))
   
   y_min <- min(power_tab$freq) * 0.98
   y_max <- max(power_tab$freq) * 1.02
@@ -94,7 +94,7 @@ power_tab[, c("vehicle_power", "relativity", "lower_rel", "upper_rel")]
   plot(power_tab$vehicle_power, power_tab$freq,
        xlab = "Vehicle power band",
        ylab = "Observed claim frequency",
-       pch  = 16,
+       pch = 16,
        ylim = c(y_min, y_max))
   
   grid()
@@ -114,11 +114,11 @@ chisq.test(power_chi) # test of independence between claims and power band
 
 mod0      <- glm(n_claims ~ offset(log(exposure)),
                  family = poisson,
-                 data   = policy_frequency)
+                 data = policy_frequency)
 
 mod_power <- glm(n_claims ~ vehicle_power + offset(log(exposure)),
                  family = poisson,
-                 data   = policy_frequency)
+                 data = policy_frequency)
 
 anova(mod0, mod_power, test = "Chisq")
 
