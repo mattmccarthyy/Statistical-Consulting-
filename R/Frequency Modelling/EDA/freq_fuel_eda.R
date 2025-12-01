@@ -1,7 +1,6 @@
 rm(list = ls())
 
 library(tidyverse)
-library(splines)
 
 policy_frequency <- readRDS(url("https://github.com/mattmccarthyy/Statistical-Consulting-/raw/refs/heads/main/data/processed/policy_frequency.rds")) 
 attach(policy_frequency)
