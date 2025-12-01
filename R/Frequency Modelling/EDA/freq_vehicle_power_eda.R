@@ -19,7 +19,7 @@ power_tab <- aggregate(
   cbind(claims   = n_claims,
         exposure = exposure) ~ vehicle_power,
   data = policy_frequency,
-  FUN  = sum
+  FUN = sum
 )
 
 # Portfolio mean claim frequency
