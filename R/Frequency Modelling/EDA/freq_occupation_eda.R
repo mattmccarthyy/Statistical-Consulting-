@@ -16,7 +16,7 @@ occ_tab <- aggregate(
   cbind(claims = n_claims,
         exposure = exposure) ~ occupation,
   data = policy_frequency,
-  FUN  = sum
+  FUN = sum
 )
 
 occ_tab$freq <- with(occ_tab, claims / exposure)
@@ -35,9 +35,9 @@ head(occ_tab, 10)
       xaxs  = "i", yaxs = "i",
       mar = c(7.5, 5.5, 3, 1),
       tcl = -0.25,
-      cex.lab  = 1.3,
+      cex.lab = 1.3,
       cex.axis = 1.3,
-      col  = "black",
+      col = "black",
       mgp = c(3.5, 0.7, 0))
   
   bp <- barplot(occ_tab$relativity,
@@ -51,9 +51,9 @@ head(occ_tab, 10)
   text(x = bp,
        y = ymin - 0.02 * diff(par("usr")[3:4]),
        labels = occ_tab$occupation,
-       srt = 45,       # rotation angle (45° = diagonal)
-       adj = 1,        # right-justify on the tick
-       xpd = TRUE,     # allow drawing outside plot region
+       srt = 45,       
+       adj = 1,        
+       xpd = TRUE,
        cex = 1.3)
   
   abline(h = 1, lty = 2, lwd = 2.2, col = "#8d17f1")
@@ -72,7 +72,7 @@ km_occ <- kmeans(log_rel, centers = 5)
 occ_tab$cluster <- km_occ$cluster
 
 clust_means <- tapply(occ_tab$relativity, occ_tab$cluster, mean)
-clust_rank  <- rank(clust_means, ties.method = "first")  # 1..5
+clust_rank <- rank(clust_means, ties.method = "first")  
 
 occ_tab$risk_bucket <- clust_rank[occ_tab$cluster]
 
@@ -114,12 +114,12 @@ occ_risk_tab
 
 {
   par(mfrow = c(1, 1),
-      xaxs  = "i", yaxs = "i",
-      mar   = c(5.5, 5.5, 3, 1),
-      tcl   = -0.25,
-      cex.lab  = 1.3,
+      xaxs = "i", yaxs = "i",
+      mar = c(5.5, 5.5, 3, 1),
+      tcl = -0.25,
+      cex.lab = 1.3,
       cex.axis = 1.2,
-      col  = "black",
+      col = "black",
       mgp = c(3.5, 0.7, 0))
   
   plot(occ_risk_tab$occupation_risk5, occ_risk_tab$freq,
