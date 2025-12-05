@@ -11,6 +11,7 @@ glimpse(policy_frequency)
 policy_frequency$security_device <- factor(policy_frequency$security_device, levels = c(0, 1), labels = c("No Security Device", "Security Device"))
 
 
+
 ###############################################################################
 # 1). Exposure and claims by security_device
 ###############################################################################
