@@ -1,36 +1,32 @@
 rm(list = ls())
 
-
-
-###################################################################################################
-# Installing and attaching packages we use.
-###################################################################################################
-
-# install.packages("readr")
-# install.packages("dplyr")
-# install.packages("conflicted")
-
-
-library(readr) # Using tidyverse to clean the data, following "An R approach to Data Cleaning and Wrangling for Educational Research".
 library(dplyr)
 library(conflicted)
 conflict_prefer("filter", "dplyr", quiet = TRUE) # Use dplyr filter by default, otherwise we may run into issues with filter() if we use MASS for example. 
 conflict_prefer("lag", "dplyr", quiet = TRUE) # Had to add this due to conflicts later on.
 
-policy_url <- "https://raw.githubusercontent.com/mattmccarthyy/Statistical-Consulting-/refs/heads/main/data/raw/motor_policy_year_100k_2025-10-22.csv"
-policy_raw <- read_csv(policy_url, show_col_types = FALSE)
+options(timeout = 600) # Times out before my cheap wifi can load in data otherwise.
+# Load in data. 
+policy_raw <- read.csv(
+  "https://raw.githubusercontent.com/mattmccarthyy/Statistical-Consulting-/refs/heads/main/data/raw/motor_policy_year_100k_2025-10-22.csv",
+  stringsAsFactors = FALSE
+)
 policy <- policy_raw
 
 
-# na_rate(): quick missingness scanner, gives a fast read on where our NAs are concentrated to guide repairs or feature pruning. 
-na_rate <- function(df) sapply(df, function(x) mean(is.na(x))) |> sort(TRUE)
+# na_rate(): quick missingness scanner, gives a fast read on where our NAs are concentrated to guide changes and feature pruning. 
+na_rate <- function(df) {
+  sapply(df, function(x) mean(is.na(x))) %>%
+    sort(decreasing = TRUE)
+}
+
 
 # Inital Checks
 # head(policy)
 str(policy)
 # glimpse(policy)
 # summary(policy)
-# EDA Complete in previosu script
+# EDA Complete in separate scripts, see R/Frequency Modelling/EDA on GitHub. 
 
 # NA Study
 na_rate(policy)[1:6]*100 # percentage NA entries, ignoring avg claims for now
@@ -38,18 +34,18 @@ na_rate(policy)[1:6]*100 # percentage NA entries, ignoring avg claims for now
 
 
 ###################################################################################################
-# Adding Missingness Flags to Columns Featuring NA's.
+# 1). Adding Missingness Flags to Columns Featuring NA's.
 ###################################################################################################
 policy <- policy %>%
   mutate(
     employment_missing = is.na(employment),
     reported_mileage_missing = is.na(reported_mileage),
-    engine_cc_missing = is.na(engine_cc),
-  )
+    engine_cc_missing = is.na(engine_cc)
+)
 
 
 ###################################################################################################
-# Checking for Missingness Effects. 
+# 2). Checking for Missingness Effects. 
 ###################################################################################################
 # Engine_cc_missing check for any noticeable effect of missingness:
 policy %>%
@@ -60,11 +56,20 @@ policy %>%
     n = n()
   )
 # Claim frequency ~1.5% higher for cases where engine_cc was NA.
-# Quick significance test (assumping Poisson)
-SE = sqrt(0.275/2093 + 0.271/351877)
-Diff = 0.275 - 0.271
-z = Diff/SE
-p_value <- 2*pnorm(-abs(z));
+# Significance test (assuming Poisson)
+miss_cc_tab <- policy %>%
+  group_by(engine_cc_missing) %>%
+    summarise(
+      total_claims = sum(n_claims),
+      total_exposure = sum(exposure),
+      .groups = "drop"
+)
+
+freq_cc <- miss_cc_tab$total_claims / miss_cc_tab$total_exposure
+SE <- sqrt(freq_cc[1] / miss_cc_tab$total_exposure[1] + freq_cc[2] / miss_cc_tab$total_exposure[2])
+Diff <- freq_cc[2] - freq_cc[1]
+z <- Diff / SE
+p_value <- 2 * pnorm(-abs(z))
 # p_value # Not statistically significant (p > 0.7)
 # 1.5% difference likely just random noise. 
 # Flag won't hurt to keep but won't help to keep. Keeping for now, unlikely to be used in the model. May remove later. 
@@ -81,11 +86,20 @@ policy %>%
 # ~12.9% higher claim rate when employment is missing
 # Ages near identical (45.3 vs. 45.1) => not just an age effect. 
 # Checking statistical significance (assuming Poisson)
-SE = sqrt(0.271/350415 + 0.306/3555)
-Diff = 0.306 - 0.271
-z = Diff/SE
-p_value = 2*pnorm(-z); p_value
-# Statistically significant (p<0.001).
+miss_emp_tab <- policy %>%
+  group_by(employment_missing) %>%
+    summarise(
+      total_claims = sum(n_claims),
+      total_exposure = sum(exposure),
+      .groups = "drop"
+)
+
+freq_emp <- miss_emp_tab$total_claims / miss_emp_tab$total_exposure
+SE <- sqrt(freq_emp[1] / miss_emp_tab$total_exposure[1] + freq_emp[2] / miss_emp_tab$total_exposure[2])
+Diff <- freq_emp[2] - freq_emp[1]
+z <- Diff / SE
+p_value <- 2 * pnorm(-abs(z)); p_value
+# Statistically significant (p < 0.001).
 # Missing employment is MNAR - the missingness is informative. Possible reasons:
 # 1). Unemployment Stigma: People may avoid reporting unemployment.
 # 2). Irregular employment: Gig workers, self-employed with variable income.
@@ -118,7 +132,7 @@ policy %>%
 
 
 ###################################################################################################
-# Deduplication. This bit is very hard. I regret doing this section. 
+# 3). Identifying Duplicates
 ###################################################################################################
 # Check if duplicate records have SAME or DIFFERENT n_claims
 duplicate_claims_check <- policy %>%
@@ -146,19 +160,9 @@ table(duplicate_claims_check$all_same_claims)
 head(duplicate_claims_check, 20)
 
 
-# Performing de-duplication
-policy <- policy %>%
-  mutate(
-    employment_missing = is.na(employment),
-    reported_mileage_missing = is.na(reported_mileage),
-    engine_cc_missing = is.na(engine_cc)
-  )
-
-cat("\nBefore deduplication:", nrow(policy), "rows\n")
-
 
 ###################################################################################################
-# Deduplication
+# 4). Deduplication
 ###################################################################################################
 policy <- policy %>%
   group_by(policy_id, cal_year) %>%
@@ -207,23 +211,21 @@ policy <- policy %>%
     avg_net = ifelse(n_claims > 0, sum_net / n_claims, 0),
     avg_gross = ifelse(n_claims > 0, sum_gross / n_claims, 0)
   )
-353970 - 347937
 # Removed 6033 rows.
-
-# This created floating-point precision errors in licensing_age := age - years_licensed, causing some entries to be 16.999 instead of 17. 
-# Round age-related variables to 2 decimal places (reasonable precision)
+# This creates floating-point precision errors in licensing_age = age - years_licensed, causing some entries to be 16.999 instead of 17. 
+# Round age-related variables to 2 decimal places.
 policy <- policy %>%
   mutate(
     age = round(age, 2),
     years_licensed = round(years_licensed, 2),
     licensing_age = age - years_licensed
   )
-# This became an issue in data-quality checks, fixing here. 
+# Became an issue in later data-quality checks, fixed here. 
 
 
 
 ###################################################################################################
-# Addressing engine_cc NA's
+# 5). Addressing engine_cc NA's
 ###################################################################################################
 # Missingness flag created at beginning of script. 
 
@@ -234,7 +236,7 @@ policy <- policy %>%
                             first(na.omit(engine_cc)), # If engine_cc is NA, replaces it with the first non-missing value in the group.
                             engine_cc)) %>% # If all values are NA, leaves them as NA, this explains the 81 remaining. 
   ungroup()
-summary(policy$engine_cc)[7] # Only 81 NA's remain.
+sum(is.na(policy$engine_cc)) # Only 81 NA's remain.
 
 # Grouped median imputation
 policy <- policy %>%
@@ -245,15 +247,14 @@ policy <- policy %>%
   ungroup()
 
 # Check if any NAs remain (due to sparse groups)
-summary(policy$engine_cc)[7] # None left.
+sum(is.na(policy$engine_cc)) # None left
 
 
 
 ###################################################################################################
-# Addressing employment NA's
+# 6). Addressing employment NA's
 ###################################################################################################
 # Missingness flag created at beginning of script.
-
 # Convert NA's to "Unknown".
 policy$employment[is.na(policy$employment)] = "Unknown"
 table(policy$employment) # All NA's have been flagged and converted to type "Unknown"
@@ -261,11 +262,10 @@ table(policy$employment) # All NA's have been flagged and converted to type "Unk
 
 
 ###################################################################################################
-# Addressing reported_mileage NA's
+# 7). Addressing reported_mileage NA's
 ###################################################################################################
 # Missingness flag created at beginning of script.
-
-# Imputing with within-driver Median (ethically conservative) - see notes for explanation.
+# Imputing with within-driver Median. See report for explanation.
 policy <- policy %>%
   group_by(policy_id) %>%
   mutate(reported_mileage = ifelse(is.na(reported_mileage), 
@@ -279,19 +279,19 @@ policy <- policy %>%
                                    median(reported_mileage, na.rm = TRUE), 
                                    reported_mileage))
 # Almost all NA's removed from dataset. Still have to do claims related ones. 
-summary(policy$reported_mileage) # No NA's.
+sum(is.na(policy$reported_mileage))
 
 
 
 ###################################################################################################
-# Ensuring exposure in (0, 1] after aggregation
+# 8). Ensuring exposure in (0, 1] after aggregation
 ###################################################################################################
 summary(policy$exposure) # All in allowed range
 
 
 
 ###################################################################################################
-# Investigating booting low exposure entries
+# 9). Investigating booting low exposure entries
 ###################################################################################################
 # Categorising polcies by exposure and examining claim frequencies.
 exposure_bands <- policy %>%
@@ -333,12 +333,12 @@ policy <- policy %>% filter(exposure >= 0.1)
 
 
 ###################################################################################################
-# Response Variable Checks
+# 10). Response Variable Checks
 ###################################################################################################
 # Ensure n_claims is non-negative integer
 summary(policy$n_claims)
-cat("Any negative claims:", sum(policy$n_claims < 0), "\n")
-cat("Any non-integer claims:", sum(policy$n_claims != round(policy$n_claims)), "\n")
+sum(policy$n_claims < 0)
+sum(policy$n_claims != round(policy$n_claims))
 
 # Claim frequency distribution
 table(policy$n_claims)
@@ -347,15 +347,14 @@ round(sum(policy$n_claims) / sum(policy$exposure), 4) # Overall frequency rate.
 
 
 ###################################################################################################
-# Data Quality Checks
+# 11). Data Quality Checks
 ###################################################################################################
-
-# Age consistency: years_licensed should never exceed age
+# Age consistency, years_licensed should never exceed age
 age_issues <- policy %>%
   filter(years_licensed > age)
 nrow(age_issues) # No. of polcies where years_licensed > age. 0 as expected.
 
-# Minimum driving age check (typically 17 in Ireland)
+# Minimum driving age check (No one should be licensed before 17, this would mean data quality issues)
 sum(policy$age - policy$years_licensed < 17) # Number of drivers licensed before age 17. 0 as expected. 
 summary(policy$age - policy$years_licensed)
 
@@ -365,16 +364,16 @@ summary(policy$vehicle_value) # None <0, all seems reasonable
 
 # NCD level range
 table(policy$ncd_level)
-sum(table(policy$ncd_level)) # 338,244, accounts for all policies as expected. 
+sum(table(policy$ncd_level)) 
 summary(policy$ncd_level) # All reasonable.
 
 
 
 ###################################################################################################
-# Rare Category Analysis (for potential combining)
+# 12). Rare Category Analysis (for potential combining)
 ###################################################################################################
-
-categorical_variables <- c("gender", "marital", "employment", "occupation", "area", "province", "body_type", "fuel", "transmission",
+categorical_variables <- c("gender", "marital", "employment", "occupation", "area", 
+                           "province", "body_type", "fuel", "transmission",
                            "primary_usage", "overnight_parking", "vehicle_power")
 
 for(var in categorical_variables) {
@@ -406,8 +405,18 @@ policy %>%
     frequency = sum(n_claims) / sum(exposure)
   )
 # Test if difference is statistically significant
-SE <- sqrt(0.284/1320 + 0.251/13596)
-z <- (0.284 - 0.251) / SE; z
+pop_tab <- policy %>%
+  filter(occupation %in% c("Pop Star", "Other")) %>%
+  group_by(occupation) %>%
+  summarise(
+    total_claims = sum(n_claims),
+    total_exposure = sum(exposure),
+    .groups = "drop"
+  )
+
+freq <- pop_tab$total_claims / pop_tab$total_exposure
+SE <- sqrt(freq[1] / pop_tab$total_exposure[1] + freq[2] / pop_tab$total_exposure[2])
+z <- (freq[pop_tab$occupation == "Pop Star"] - freq[pop_tab$occupation == "Other"]) / SE
 p_value <- 2 * pnorm(-abs(z)); p_value
 # Difference is statistically significant (p<0.05)
 
@@ -434,21 +443,21 @@ policy %>%
 # EV's do exhibit higher risk, but regardless:
 # EV's exhibit different risk profiles (different acceleration, repair costs, driver demographics)
 # Growing market segment (important for future pricing)
-# 1,693 is sufficient for GLM
+# 1,693 is sufficient for modelling.
+# Leaving as is. 
 
 
 
 ###################################################################################################
-# Cleaning global environment
+# 13). Cleaning global environment
 ###################################################################################################
 rm(list = setdiff(ls(), c("policy", "policy_raw")))
 
 
 
 ###################################################################################################
-# Dataset Prep before Freq. Modelling (Saving modelling decisions for that script, just formatting columns)
+# 14). Dataset Prep before Freq. Modelling (Saving modelling decisions for that script, just formatting columns)
 ###################################################################################################
-
 # Make "obvious types" explicit integers
 policy <- policy %>%
   mutate(
@@ -472,7 +481,6 @@ policy <- policy %>%
     transmission = factor(transmission),
     primary_usage = factor(primary_usage),
     overnight_parking = factor(overnight_parking),
-    security_device = factor(security_device),
     vehicle_power = factor(vehicle_power)
   )
 
@@ -480,18 +488,17 @@ policy <- policy %>%
 policy <- policy %>%
   mutate(
     occasional_commercial = as.integer(occasional_commercial), # logical => 0/1 (FALSE = 0, TRUE = 1)
-    security_device = as.integer(security_device == "TRUE"), # factor("FALSE","TRUE") => 0/1 via explicit comparison
+    security_device = as.integer(security_device), # FALSE = 0, TRUE = 1.
     employment_missing = as.integer(employment_missing),
     reported_mileage_missing = as.integer(reported_mileage_missing),
-    engine_cc_missing = as.integer(engine_cc_missing),
-  )
+    engine_cc_missing = as.integer(engine_cc_missing)
+)
 
 
 
 ###################################################################################################
-# Final Dataset Verification
+# 15). Final Dataset Verification
 ###################################################################################################
-
 nrow(policy) # Total Observations
 min(policy$cal_year) # Date range
 n_distinct(policy$policy_id) # Number of unique policies
@@ -509,7 +516,7 @@ sum(duplicated(policy[c("policy_id", "cal_year")])) # 0 duplicates
 
 
 ###################################################################################################
-# Final Frequency Specific Dataset Modification
+# 16). Final Frequency Specific Dataset Modification
 ###################################################################################################
 policy_frequency <- policy %>%
   select(-sum_net, -sum_gross, -avg_net, -avg_gross)
@@ -518,6 +525,7 @@ policy_frequency <- policy %>%
 
 
 ###################################################################################################
-# Exporting
+# 17). Exporting
 ###################################################################################################
+if (!dir.exists("data")) dir.create("data") # incase data folder not made yet on your machine, this makes it and we can store data there. 
 saveRDS(policy_frequency, "data/policy_frequency.rds")
