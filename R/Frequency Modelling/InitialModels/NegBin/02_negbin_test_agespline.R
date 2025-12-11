@@ -69,11 +69,10 @@ summary(final_nb_M)
 
 
 ###############################################################################
-# Check overfitting: train vs validation performance
+# Check for overfitting: train vs validation performance
 ###############################################################################
-
 # 1) Predictions
-train$pred_M  <- predict(final_nb_M, newdata = train, type = "response")
+train$pred_M <- predict(final_nb_M, newdata = train, type = "response")
 validation$pred_M <- predict(final_nb_M, newdata = validation, type = "response")
 
 # 2) RMSE (scaled measure, comparable across sample sizes)
