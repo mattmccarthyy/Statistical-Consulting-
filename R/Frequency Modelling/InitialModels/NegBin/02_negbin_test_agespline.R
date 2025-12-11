@@ -40,9 +40,8 @@ policy_frequency$vehicle_age <- pmin(policy_frequency$vehicle_age, 19)
 # Train / Validation / Test split
 ###############################################################################
 split <- split_data(policy_frequency) # external function
-train <- split$train
-valid <- split$validation
-test  <- split$test
+
+
 
 ###############################################################################
 # Fit NB model 
