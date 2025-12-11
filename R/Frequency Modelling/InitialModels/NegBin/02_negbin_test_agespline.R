@@ -62,7 +62,7 @@ final_nb_M <- glm.nb(
     ns(age,df = 6):factor(primary_usage) +
     ns(age,df = 6):factor(gender) +
     offset(log(exposure)),
-  data = final_train,
+  data = final_trainset,
   link = "log"
 )
 summary(final_nb_M)
