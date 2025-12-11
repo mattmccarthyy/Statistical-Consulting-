@@ -36,17 +36,17 @@ policy_frequency$num_drivers <- factor(policy_frequency$num_drivers)
 # Cap vehicle age
 policy_frequency$vehicle_age <- pmin(policy_frequency$vehicle_age, 19)
 
+
 ###############################################################################
 # Train / Validation / Test split
 ###############################################################################
-split <- split_data(policy_frequency) # external function
-
-
+split_data(policy_frequency) # external function
+final_trainset <- rbind(train, validation)
 
 ###############################################################################
 # Fit NB model 
 ###############################################################################
-final_nbA <- glm.nb(
+final_nb_M <- glm.nb(
   n_claims ~ 
     ns(age, df = 6) +
     factor(primary_usage) +
@@ -58,63 +58,42 @@ final_nbA <- glm.nb(
     factor(employment_missing) +
     factor(body_type) +
     factor(gender) +
-    years_licensed +
     vehicle_age +
-    factor(reported_mileage_missing) +
-    factor(security_device) +
     ns(age,df = 6):factor(primary_usage) +
     ns(age,df = 6):factor(gender) +
     offset(log(exposure)),
-  data = train,
+  data = final_train,
   link = "log"
 )
-
-final_nbM <- glm.nb(
-  n_claims ~ 
-    ns(age, df = 8) +
-    factor(primary_usage) +
-    factor(vehicle_power) +
-    factor(area) +
-    factor(ncd_level) +
-    factor(marital) +
-    factor(occasional_commercial) +
-    factor(employment_missing) +
-    factor(body_type) +
-    factor(gender) +
-    years_licensed +
-    vehicle_age +
-    factor(reported_mileage_missing) +
-    factor(security_device) +
-    ns(age,df = 8):factor(primary_usage) +
-    ns(age,df = 8):factor(gender) +
-    offset(log(exposure)),
-  data = train,
-  link = "log"
-)
+summary(final_nb_M)
 
 
 ###############################################################################
-# Compare two NB GLMs on the validation set
+# Check overfitting: train vs validation performance
 ###############################################################################
-# Predictions on validation set
-validation$pred_A <- predict(final_nbA, newdata = validation, type = "response")
-validation$pred_M <- predict(final_nbM, newdata = validation, type = "response")
 
-# RMSE
-rmse_A <- sqrt(mean((validation$n_claims - validation$pred_A)^2))
-rmse_M <- sqrt(mean((validation$n_claims - validation$pred_M)^2))
+# 1) Predictions
+train$pred_M  <- predict(final_nb_M, newdata = train, type = "response")
+validation$pred_M <- predict(final_nb_M, newdata = validation, type = "response")
 
-# NB deviance
-dev_A <- 2 * sum(validation$n_claims * log((validation$n_claims + 1e-10) / validation$pred_A) -
-                   (validation$n_claims - validation$pred_A))
+# 2) RMSE (scaled measure, comparable across sample sizes)
+rmse_train_M <- sqrt(mean((train$n_claims - train$pred_M)^2))
+rmse_valid_M <- sqrt(mean((validation$n_claims - validation$pred_M)^2))
 
-dev_M <- 2 * sum(validation$n_claims * log((validation$n_claims + 1e-10) / validation$pred_M) -
-                   (validation$n_claims - validation$pred_M))
+rmse_train_M
+rmse_valid_M
 
-c(rmse_A, rmse_M) # rmse M lower on out-of-sample data
-c(dev_A, dev_M) # deviance M lower
-AIC(final_nbA, final_nbM) # AIC M lower. (BIC Higher). 
+# 3) Scaled deviance (correct measure for comparing different sized datasets)
+scaled_dev_train <- deviance(final_nb_M) / sum(train$exposure)
 
+dev_valid_M <- 2 * sum(
+  validation$n_claims * log((validation$n_claims + 1e-10) / validation$pred_M) -
+    (validation$n_claims - validation$pred_M)
+)
 
+scaled_dev_valid <- dev_valid_M / sum(validation$exposure)
+
+scaled_dev_train
+scaled_dev_valid
 
 
