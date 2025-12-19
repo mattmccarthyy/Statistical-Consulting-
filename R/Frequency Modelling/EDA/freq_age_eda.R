@@ -17,11 +17,11 @@ age_tab <- aggregate(cbind(claims = n_claims,
 age_tab$freq <- age_tab$claims / age_tab$exposure
 
 par(mfrow = c(1, 1),
-    xaxs  = "i", yaxs = "i", 
-    mar   = c(5.5, 5.5, 3, 1),
+    xaxs = "i", yaxs = "i", 
+    mar = c(5.5, 5.5, 3, 1),
     tcl = -0.25, 
     cex.main = 1.5,
-    cex.lab  = 1.3,
+    cex.lab = 1.3,
     cex.axis = 1.2,
     col = "black",
     mgp = c(3.5, 0.7, 0))
@@ -37,7 +37,7 @@ grid()
 {
   par(mfrow = c(1, 1),
       xaxs  = "i", yaxs = "i", 
-      mar   = c(5.5, 5.5, 3, 1),
+      mar = c(5.5, 5.5, 3, 1),
       tcl = -0.25, 
       cex.main = 1.5,
       cex.lab  = 1.3,
@@ -153,7 +153,7 @@ cbind(df = dfs, AIC = aic)
          cex = 1.35)   
   
   abline(v = 8, lty = 2, lwd = 2)
-  text(8, min(aic) + 40, labels = "Chosen df = 8", pos = 4)
+  text(8, min(aic) + 40, labels = "Initial chosen df = 8", pos = 4)
   
   yticks <- axTicks(2)  # default tick positions on y-axis
   axis(2, at = yticks,
@@ -167,4 +167,4 @@ min_aic <- min(aic)
 best_df <- dfs[which.min(aic)]
 best_df
 best_model <- mods[[which.min(aic)]]
-# 15 and we wouild just overfit, plateau at 8 is reasonable. 
+# 15 and we would just overfit, plateau at 8 is reasonable. 
