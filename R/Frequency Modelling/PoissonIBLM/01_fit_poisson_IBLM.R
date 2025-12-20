@@ -126,5 +126,5 @@ iblm_poisson <- train_iblm_xgb(
 # Save fitted model and predictors for auditability later.
 # Also saving test set for the comparison script. 
 ###############################################################################
-saveRDS(list(model = iblm_poisson, preds = preds), file = file.path("R", "Frequency Modelling", "PoissonIBLM", "iblm_poisson_frequency.rds"))
+saveRDS(list(model = iblm_poisson, preds = preds), file = file.path("R", "Frequency Modelling", "PoissonIBLM", "iblm_poisson_model.rds"))
 saveRDS(test1, file = file.path("R", "Frequency Modelling", "PoissonIBLM", "test_iblm.rds"))
