@@ -3,4 +3,7 @@
 .Ruserdata
 .RData
 .RDataTmp
-.Rproj.user/
+.Rproj.user/*.rds
+
+# Ignore large local model artifact (not for version control)
+R/Frequency Modelling/PoissonIBLM/iblm_poisson_model.rds
