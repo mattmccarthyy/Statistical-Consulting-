@@ -7,3 +7,4 @@
 
 # Ignore large local model artifact (not for version control)
 R/Frequency Modelling/PoissonIBLM/iblm_poisson_model.rds
+R/Frequency Modelling/PoissonIBLM/iblm_poisson_frequency.rds
