@@ -187,5 +187,7 @@ gamma_dev_mean_1 <- gamma_dev_mean(test$gross_amount, mu_test); gamma_dev_mean_1
 # Saving Everything  
 ###############################################################################
 saveRDS(test, file = file.path("R","Severity Modelling","GammaIBLM","test_gamma_iblm.rds"))
+saveRDS(train, file = file.path("R","Severity Modelling","GammaIBLM","train_gamma_iblm.rds"))
+saveRDS(validation, file = file.path("R","Severity Modelling","GammaIBLM","validation_gamma_iblm.rds"))
 saveRDS(list(model = iblm_gamma_final, preds = preds, best_grid = best_grid, test_dev = gamma_dev_mean_1), file = file.path("R","Severity Modelling","GammaIBLM","iblm_gamma_final.rds"))
         
