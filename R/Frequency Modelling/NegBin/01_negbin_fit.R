@@ -1,22 +1,45 @@
-###################################################################################################################################################################################
-#==================================================================================================================================================================================
-
-##Negative Binomial GLM##
-
-#==========================================================================================================================================================================================
-
-##Split Data
-
-split_data(policy_frequency)
-
-#===========================================================================================================================================================================================
-
-##Selection Loops
-
-#Load in MASS and splines
+##############################################################################
+# Negative Binomial GLM##
+##############################################################################
+# Written by Aine Hayden. 
+# Load in libraries
 library(MASS)
 library(splines)
 
+# Load data
+policy_frequency <- readRDS(
+  url("https://github.com/mattmccarthyy/Statistical-Consulting-/raw/refs/heads/main/data/processed/policy_frequency.rds")
+)
+###############################################################################
+# Train / validation / test split (60/20/20) as used in every other model
+###############################################################################
+split_data <- function(data){
+  n <- nrow(data)
+  indices <- sample.int(n)
+  
+  train_size <- floor(0.6 * n)
+  validation_size <- floor(0.2 * n)
+  
+  train_index <- indices[1:train_size]
+  validation_index <- indices[(train_size + 1):(train_size + validation_size)]
+  test_index <- indices[(train_size + validation_size + 1):n]
+  
+  train <- data[train_index, , drop = FALSE]
+  validation <- data[validation_index, , drop = FALSE]
+  test <- data[test_index, , drop = FALSE]
+  
+  assign("train", train, envir = .GlobalEnv)
+  assign("validation", validation, envir = .GlobalEnv)
+  assign("test", test, envir = .GlobalEnv) # Changed to test 1, as slightly different columns than used in nb. Response is identical. Ensure this in comparison script. 
+}
+
+split_data(policy_frequency)
+
+
+
+##############################################################################
+# Selection Loops
+##############################################################################
 #Null Model - intercept and offset of log(exposure)
 null_nb = glm.nb(n_claims~1 + offset(log(exposure)), link="log", data=train)
 
@@ -61,10 +84,12 @@ best_nb = glm.nb(formula = n_claims ~ ns(age, df = 6) + factor(primary_usage) +
                  link = "log")
 summary(best_nb)
 BIC(best_nb)
-#===================================================================================================================================================
 
-##Interactions
 
+
+##############################################################################
+# Interactions
+##############################################################################
 #Test reduction in AIC for each 2 way combination of predictors in best_poisson
 
 #Define predictors 
@@ -136,10 +161,11 @@ nb_model = forward_nb_int
 #LRT to see if interactions improve the model
 anova(best_nb, nb_model, test="LRT") #Interactions 
 
-#=================================================================================================================================
 
-##Final Negative Binomial GLM
 
+##############################################################################
+# Final Negative Binomial GLM
+##############################################################################
 nb_model = glm.nb(formula = n_claims ~ ns(age, df = 6) + factor(primary_usage) + 
                     factor(vehicle_power) + factor(area) + factor(ncd_level) + 
                     factor(marital) + factor(occasional_commercial) + factor(employment_missing) + 
@@ -151,18 +177,20 @@ nb_model = glm.nb(formula = n_claims ~ ns(age, df = 6) + factor(primary_usage) +
 summary(nb_model)
 BIC(nb_model)
 
-#==========================================================================================================================================
 
-##Multicollinearity
 
+##############################################################################
+# Multicollinearity
+##############################################################################
 library(car)
 vif(nb_model) #There are aliased coefficients in model - need to resolve
 alias(nb_model)
 
-#===============================================================================================================================================
 
-##Resolve aliased coefficients
 
+##############################################################################
+# Resolve aliased coefficients
+##############################################################################
 #Test nb model with no interactions
 nb_model_no_int = glm.nb(formula = n_claims ~ ns(age, df = 6) + factor(primary_usage) + 
                     factor(vehicle_power) + factor(area) + factor(ncd_level) + 
@@ -219,9 +247,11 @@ final_nb = glm.nb(formula = n_claims ~ ns(age, df = 6) + factor(primary_usage) +
 vif(final_nb) #Years_licensed has high gvif - may need to revisit
 alias(final_nb) #No aliased coefficients
 
-#=====================================================================================================================================
 
-##Final NB Model (No aliasing)
+
+##############################################################################
+# Final NB Model (No aliasing)
+##############################################################################
 final_nb = glm.nb(formula = n_claims ~ ns(age, df = 6) + factor(primary_usage) + 
                     factor(vehicle_power) + factor(area) + factor(ncd_level) + 
                     factor(marital) + factor(occasional_commercial) + factor(employment_missing) + 
@@ -229,6 +259,7 @@ final_nb = glm.nb(formula = n_claims ~ ns(age, df = 6) + factor(primary_usage) +
                     factor(reported_mileage_missing) + factor(security_device) + offset(log(exposure)) +
                     ns(age,df=6):factor(primary_usage) + ns(age,df=6):factor(gender), 
                   data = train, init.theta = 1.775461299, link = "log")
-summary(final_nb) #AIC=233395
+summary(final_nb)
+AIC(final_nb)
 
 anova(best_nb, final_nb, test="LRT")
