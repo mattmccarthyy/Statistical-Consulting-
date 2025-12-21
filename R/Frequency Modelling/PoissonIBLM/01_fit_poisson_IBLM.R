@@ -32,7 +32,7 @@ colnames(age_ns) <- paste0("age_ns", seq_len(ncol(age_ns)))
 policy_frequency_derived <- cbind(policy_frequency_derived, age_ns)
 
 ###############################################################################
-# Predictor Variables (define ONCE, after all engineered columns exist)
+# Predictor Variables
 ###############################################################################
 preds <- c(
   "occupation_risk5",
