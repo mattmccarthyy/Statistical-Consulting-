@@ -169,7 +169,7 @@ mae_glm <- mean(abs(test$gross_amount - pred_glm))
 pred_tree <- exp(predict(fit_tree_pruned, newdata = test))
 
 rmse_tree <- sqrt(mean((test$gross_amount - pred_tree)^2))
-mae_tree<- mean(abs(test$gross_amount - pred_tree))
+mae_tree <- mean(abs(test$gross_amount - pred_tree))
 
 cbind(
   rmse_glm = rmse_glm,
@@ -177,4 +177,6 @@ cbind(
   mae_glm = mae_glm,
   mae_tree = mae_tree
 )
+
+saveRDS(fit_tree_pruned, file = file.path("R","Severity Modelling","DT","pruned_decision_tree.rds"))
 
