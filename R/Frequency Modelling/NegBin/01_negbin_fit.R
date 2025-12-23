@@ -263,3 +263,12 @@ summary(final_nb)
 AIC(final_nb)
 
 anova(best_nb, final_nb, test="LRT")
+
+
+
+###############################################################################
+# Save fitted model and predictors for auditability later.
+# Also saving test set for the comparison script. 
+###############################################################################
+saveRDS(list(model = final_nb), file = file.path("R", "Frequency Modelling", "NegBin", "negbin_model.rds"))
+saveRDS(test1, file = file.path("R", "Frequency Modelling", "NegBin", "test_negbin.rds"))
