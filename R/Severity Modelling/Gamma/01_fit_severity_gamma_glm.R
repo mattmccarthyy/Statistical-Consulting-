@@ -227,6 +227,7 @@ best_model_severity = glm(net_amount ~ factor(vehicle_power) + factor(usage) +
 AIC(best_model_severity)#983826.4
 
 saveRDS(best_model_severity, file = file.path("R","Severity Modelling","Gamma","gamma_GLM.rds"))
+saveRDS(test, file = file.path("R","Severity Modelling","Gamma","test.rds"))
 
 #LRT
 anova(best_model_s, best_model_severity, test="LRT") #Interactions Improve Fit
