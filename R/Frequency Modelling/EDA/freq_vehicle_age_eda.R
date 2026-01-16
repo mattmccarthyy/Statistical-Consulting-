@@ -46,7 +46,7 @@ vage_tab$freq <- with(vage_tab, claims / exposure)
        pch = 16,
        ylim = c(0.2, 0.35),
        xlim = c(0, 20))
-  lines(lowess(vage_tab$vehicle_age_cap, vage_tab$freq, f = 0.6),
+  lines(lowess(vage_tab$vehicle_age_cap, vage_tab$freq, f = 0.33),
         col = "#8d17f1", lwd = 2.2)
   grid()
 }
