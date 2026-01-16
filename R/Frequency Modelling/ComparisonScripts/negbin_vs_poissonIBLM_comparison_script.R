@@ -17,7 +17,8 @@ final_nb <- readRDS(
   url("https://github.com/mattmccarthyy/Statistical-Consulting-/raw/refs/heads/main/R/Frequency%20Modelling/NegBin/negbin_model.rds")
 )
 
-# Not loading in the IBLM object for now. 300mb file difficult to get to GitHub. 
+# Not loading in the IBLM object for now. 300mb file difficult to get to GitHub. Keeping local. 
+iblm_poisson <- iblm_poisson_model$model
 
 ###############################################################################
 # Ensuring both test sets are identical. 
@@ -110,8 +111,8 @@ calib_tab
   
   plot(d, calib_tab$y,
        type = "n",
-       xlab = "NB risk decile (Low to High)",
-       ylab = "Mean claim count",
+       xlab = "Frequency risk decile (ranked by NegBin GLM predicted mean)",
+       ylab = "Decile mean frequency (Observed and Predicted)",
        xaxt = "n",
        ylim = c(0, 0.6))
   
@@ -130,6 +131,7 @@ calib_tab
          lty = 1,
          lwd = 2,
          pch = 16,
-         bty = "n")
+         bty = "n",
+         cex = 1.35)
   box() # Looks rough compared to other plots in report without the box. 
 }
