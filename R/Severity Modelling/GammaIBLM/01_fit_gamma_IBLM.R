@@ -18,7 +18,7 @@ claims_severity <- readRDS(
 ###############################################################################
 claims_severity$security_device <- NULL # Removing based on EDA
 
-# These are ints but must be factors to match your Gamma GLM
+# These are ints but must be factors to match the Gamma GLM
 claims_severity$occasional_commercial <- factor(claims_severity$occasional_commercial)
 claims_severity$ncd_level <- factor(claims_severity$ncd_level)
 claims_severity$reported_mileage_missing <- factor(claims_severity$reported_mileage_missing)
