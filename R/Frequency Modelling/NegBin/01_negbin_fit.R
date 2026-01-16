@@ -255,9 +255,9 @@ alias(final_nb) #No aliased coefficients
 final_nb = glm.nb(formula = n_claims ~ ns(age, df = 6) + factor(primary_usage) + 
                     factor(vehicle_power) + factor(area) + factor(ncd_level) + 
                     factor(marital) + factor(occasional_commercial) + factor(employment_missing) + 
-                    factor(body_type) + factor(gender) + years_licensed + vehicle_age + 
+                    factor(body_type) + years_licensed + vehicle_age + 
                     factor(reported_mileage_missing) + factor(security_device) + offset(log(exposure)) +
-                    ns(age,df=6):factor(primary_usage) + ns(age,df=6):factor(gender), 
+                    ns(age,df=6):factor(primary_usage), 
                   data = train, init.theta = 1.775461299, link = "log")
 summary(final_nb)
 AIC(final_nb)
@@ -270,5 +270,5 @@ anova(best_nb, final_nb, test="LRT")
 # Save fitted model and predictors for auditability later.
 # Also saving test set for the comparison script. 
 ###############################################################################
-saveRDS(list(model = final_nb), file = file.path("R", "Frequency Modelling", "NegBin", "negbin_model.rds"))
-saveRDS(test1, file = file.path("R", "Frequency Modelling", "NegBin", "test_negbin.rds"))
+saveRDS(final_nb, file = file.path("R", "Frequency Modelling", "NegBin", "negbin_model.rds"))
+saveRDS(test, file = file.path("R", "Frequency Modelling", "NegBin", "test_negbin.rds"))
