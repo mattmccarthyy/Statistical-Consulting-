@@ -14,7 +14,7 @@ test_glm <- readRDS(url("https://github.com/mattmccarthyy/Statistical-Consulting
 
 glm_final <- readRDS(url("https://github.com/mattmccarthyy/Statistical-Consulting-/raw/refs/heads/main/R/Severity%20Modelling/Gamma/gamma_GLM.rds"))
 
-iblm_obj  <- readRDS(url("https://github.com/mattmccarthyy/Statistical-Consulting-/raw/refs/heads/main/R/Severity%20Modelling/GammaIBLM/iblm_gamma_final.rds"))
+iblm_obj <- readRDS(url("https://github.com/mattmccarthyy/Statistical-Consulting-/raw/refs/heads/main/R/Severity%20Modelling/GammaIBLM/iblm_gamma_final.rds"))
 iblm_final <- iblm_obj$model
 preds <- iblm_obj$preds
 
@@ -22,7 +22,7 @@ preds <- iblm_obj$preds
 claims_severity <- readRDS(url("https://github.com/mattmccarthyy/Statistical-Consulting-/raw/refs/heads/main/data/processed/claims_severity.rds"))
 
 ###############################################################################
-# Rebuilding IBLM test set (factors etc changing minorly, same test set, just reformatting)
+# Rebuilding IBLM test set (factors etc minor changes, same test set, just reformatting)
 ###############################################################################
 test_iblm_base <- test_glm
 test_iblm_base$security_device <- NULL
@@ -130,8 +130,8 @@ calib_tab_glm
   
   plot(d, tab$y,
        type = "n",
-       xlab = "GLM predicted severity decile (Low to High)",
-       ylab = "Mean observed / predicted severity",
+       xlab = "Severity risk decile (ranked by Gamma GLM predicted mean)",
+       ylab = "Decile mean severity (Observed and Predicted)",
        xaxt = "n",
        yaxt = "n",
        ylim = c(8000, 22000))
@@ -152,12 +152,13 @@ calib_tab_glm
   legend("topleft",
          legend = c("Observed", "Gamma GLM predicted", "Gamma IBLM predicted"),
          col = c("black", "#1f77b4", "#8d17f1"),
-         lty = 1, lwd = 2, pch = 16, bty = "n")
+         lty = 1, lwd = 2, pch = 16, bty = "n",
+         cex = 1.5)
   box()
 }
 
 
-
+?legend
 
 
 
