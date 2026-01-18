@@ -2,7 +2,10 @@ rm(list = ls())
 
 library(tidyverse)
 
-claims_severity <- readRDS(url("https://github.com/mattmccarthyy/Statistical-Consulting-/raw/refs/heads/main/data/processed/claims_severity.rds")) 
+claims_severity <- readRDS(
+  url("https://github.com/mattmccarthyy/Statistical-Consulting-/raw/refs/heads/main/data/processed/claims_severity.rds")
+) 
+
 glimpse(claims_severity)
 
 
@@ -303,3 +306,67 @@ BIC(m_lin, best_mod) # Just out of interest, not too informative here.
 # No clear pattern => age as a spline with 6 df is adequate. 
 # The large residuals are from large claims. Fromt the literature review
 # we know that this is expected for Gamma.
+
+###############################################################################
+# Creating an age-spline visualisation for final presentation @ Aine F.
+###############################################################################
+m_spl6 <- glm(gross_amount ~ ns(age, df = 6), family = Gamma(link = "log"), data = claims_severity)
+
+# Smooth fitted curve
+age_grid <- seq(min(claims_severity$age, na.rm = TRUE), max(claims_severity$age, na.rm = TRUE), length.out = 300) # Just a sequence of points
+mu_hat <- predict(m_spl6, newdata = data.frame(age = age_grid), type = "response")
+
+# Bin ages (quantile bins) and compute binned means
+nbin <- 20 # 20 bins
+cuts <- unique(quantile(claims_severity$age, probs = seq(0, 1, length.out = nbin + 1), na.rm = TRUE))
+
+claims_severity$age_bin <- cut(claims_severity$age, breaks = cuts, include.lowest = TRUE)
+
+bin_age <- tapply(claims_severity$age, claims_severity$age_bin, mean, na.rm = TRUE)
+bin_sev <- tapply(claims_severity$gross_amount, claims_severity$age_bin, mean, na.rm = TRUE)
+
+bin_tab <- data.frame(
+  age_mean = as.numeric(bin_age),
+  sev_mean = as.numeric(bin_sev)
+)
+bin_tab <- bin_tab[complete.cases(bin_tab), ]
+
+# Plot
+{
+  par(mfrow = c(1, 1),
+      xaxs = "i", 
+      yaxs="i",
+      mar=c(5.5, 5.5, 3, 1),
+      tcl = -0.25,
+      cex.main = 1.5,
+      cex.lab = 1.7,
+      cex.axis = 1.5,
+      mgp = c(3.5, 0.7, 0))
+  
+  plot(bin_tab$age_mean, bin_tab$sev_mean,
+       pch = 16,
+       xlab = "Age",
+       ylab = "Mean gross claim amount",
+       xlim = c(15, 80),
+       ylim = c(10000, 14000),
+       yaxt = "n")
+  
+  yt <- axTicks(2)
+  axis(2, at = yt, labels = format(yt, big.mark = ",", scientific = FALSE))
+  
+  grid()
+  lines(age_grid, mu_hat, lwd = 2, col = "#8d17f1")
+  
+  legend("topleft",
+         legend = c("Binned mean severity", "Spline fit (df = 6)"),
+         pch = c(16, NA),
+         lty = c(NA, 1),
+         lwd = c(NA, 2),
+         bty = "n",
+         cex = 1.35,
+         col = c("black", "#8d17f1"))
+  
+  box()
+}
+
+
